@@ -5,6 +5,8 @@ android {
 
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
+        buildToolsVersion '28.0.3'
+
     }
 }
 
