@@ -11,23 +11,29 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.example.paginate.adapter.RecyclerPersonAdapter;
 import com.example.paginate.data.DataProvider;
 import com.paginate.Paginate;
+import com.paginate.recycler.ErrorListItemCreator;
 import com.paginate.recycler.LoadingListItemCreator;
 import com.paginate.recycler.LoadingListItemSpanLookup;
 
 import jp.wasabeef.recyclerview.animators.SlideInUpAnimator;
 
-public class RecyclerViewExampleActivity extends BaseActivity implements Paginate.Callbacks {
+public class RecyclerViewExampleActivity extends BaseActivity implements
+        Paginate.Callbacks {
 
+    private static final String TAG = "RecyclerViewExampleActi";
     private static final int GRID_SPAN = 3;
 
     private RecyclerView recyclerView;
     private RecyclerPersonAdapter adapter;
+    private CustomErrorListItemCreator customErrorListItemCreator;
     private boolean loading = false;
+    private boolean loadingErrorOccurred = false;
     private int page = 0;
     private Handler handler;
     private Paginate paginate;
@@ -87,10 +93,14 @@ public class RecyclerViewExampleActivity extends BaseActivity implements Paginat
         recyclerView.setItemAnimator(new SlideInUpAnimator());
         recyclerView.setAdapter(adapter);
 
+        customErrorListItemCreator = new CustomErrorListItemCreator();
+
         paginate = Paginate.with(recyclerView, this)
                 .setLoadingTriggerThreshold(threshold)
                 .addLoadingListItem(addLoadingRow)
                 .setLoadingListItemCreator(customLoadingListItem ? new CustomLoadingListItemCreator() : null)
+                .addErrorListItem(addErrorRow)
+                .setCustomErrorItemCreator(customErrorListItem ? customErrorListItemCreator : null)
                 .setLoadingListItemSpanSizeLookup(new LoadingListItemSpanLookup() {
                     @Override
                     public int getSpanSize() {
@@ -104,7 +114,9 @@ public class RecyclerViewExampleActivity extends BaseActivity implements Paginat
     public synchronized void onLoadMore() {
         Log.d("Paginate", "onLoadMore");
         loading = true;
-        // Fake asynchronous loading that will generate page of random data after some delay
+        loadingErrorOccurred = false;
+        // Fake asynchronous loading that will generate page of random
+        // data after some delay
         handler.postDelayed(fakeCallback, networkDelay);
     }
 
@@ -115,15 +127,33 @@ public class RecyclerViewExampleActivity extends BaseActivity implements Paginat
 
     @Override
     public boolean hasLoadedAllItems() {
-        return page == totalPages; // If all pages are loaded return true
+        return page == totalPages;   // If all pages are loaded return true
+    }
+
+    @Override
+    public synchronized boolean hasLoadingErrorOccurred() {
+        return loadingErrorOccurred;
+    }
+
+    @Override
+    public void onLoadMoreFailed() {
+        Log.d(TAG, "onLoadMoreFailed ");
+        page = 0;
+        loadingErrorOccurred = true;
+        loading = false;
     }
 
     private Runnable fakeCallback = new Runnable() {
         @Override
         public void run() {
-            page++;
-            adapter.add(DataProvider.getRandomData(itemsPerPage));
-            loading = false;
+            if (page != 3) {
+                page++;
+                adapter.add(DataProvider.getRandomData(itemsPerPage));
+                loading = false;
+                loadingErrorOccurred = false;
+            } else {
+                loadingErrorOccurred = true;
+            }
         }
     };
 
@@ -131,14 +161,16 @@ public class RecyclerViewExampleActivity extends BaseActivity implements Paginat
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-            View view = inflater.inflate(R.layout.custom_loading_list_item, parent, false);
+            View view = inflater.inflate(R.layout.custom_loading_list_item,
+                    parent, false);
             return new VH(view);
         }
 
         @Override
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
             VH vh = (VH) holder;
-            vh.tvLoading.setText(String.format("Total items loaded: %d.\nLoading more...", adapter.getItemCount()));
+            vh.tvLoading.setText(String.format("Total items loaded: %d.\n" +
+                    "Loading more...", adapter.getItemCount()));
 
             // This is how you can make full span if you are using StaggeredGridLayoutManager
             if (recyclerView.getLayoutManager() instanceof StaggeredGridLayoutManager) {
@@ -157,4 +189,41 @@ public class RecyclerViewExampleActivity extends BaseActivity implements Paginat
         }
     }
 
+    private class CustomErrorListItemCreator implements ErrorListItemCreator {
+        @Override
+        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+            View view = inflater.inflate(R.layout.error_row,
+                    parent,
+                    false);
+
+            return new CustomErrorVH(view);
+        }
+
+        @Override
+        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+
+        }
+
+        class CustomErrorVH extends RecyclerView.ViewHolder {
+            Button btnRetry;
+
+            public CustomErrorVH(View itemView) {
+                super(itemView);
+                btnRetry = (Button) itemView.
+                        findViewById(R.id.btnRetry);
+                btnRetry.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        loadingErrorOccurred = false;
+                        page = 0;
+                        onLoadMore();
+                        paginate.adapterChanged();
+                    }
+                });
+
+            }
+        }
+
+    }
 }

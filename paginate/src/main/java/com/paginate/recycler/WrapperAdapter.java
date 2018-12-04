@@ -5,30 +5,58 @@ import android.view.ViewGroup;
 
 class WrapperAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    private static final int ITEM_VIEW_TYPE_LOADING = Integer.MAX_VALUE - 50; // Magic
+    private final int ITEM_VIEW_TYPE_LOADING = Integer.MAX_VALUE - 50; // Magic
+    private final int ITEM_VIEW_TYPE_ERROR = Integer.MAX_VALUE - 100; // Magic TOO!
 
     private final RecyclerView.Adapter wrappedAdapter;
-    private final LoadingListItemCreator loadingListItemCreator;
+    private LoadingListItemCreator loadingListItemCreator;
+    private ErrorListItemCreator errorListItemCreator;
     private boolean displayLoadingRow = true;
+    private boolean displayErrorRow = true;
 
-    public WrapperAdapter(RecyclerView.Adapter adapter, LoadingListItemCreator creator) {
+
+    public WrapperAdapter(RecyclerView.Adapter adapter) {
         this.wrappedAdapter = adapter;
+    }
+
+
+    public void setLoadingListItemCreator(LoadingListItemCreator creator) {
         this.loadingListItemCreator = creator;
     }
 
+    public void setErrorListItemCreator(ErrorListItemCreator creator) {
+        this.errorListItemCreator = creator;
+    }
+
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        if (viewType == ITEM_VIEW_TYPE_LOADING) {
-            return loadingListItemCreator.onCreateViewHolder(parent, viewType);
-        } else {
-            return wrappedAdapter.onCreateViewHolder(parent, viewType);
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent,
+                                                      int viewType) {
+        switch (viewType) {
+            case ITEM_VIEW_TYPE_LOADING: {
+                return loadingListItemCreator.onCreateViewHolder(parent,
+                        viewType);
+
+            }
+            case ITEM_VIEW_TYPE_ERROR: {
+                return errorListItemCreator.onCreateViewHolder(parent,
+                        viewType);
+
+            }
+            default: {
+                return wrappedAdapter.onCreateViewHolder(parent,
+                        viewType);
+
+            }
         }
+
     }
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         if (isLoadingRow(position)) {
             loadingListItemCreator.onBindViewHolder(holder, position);
+        } else if (isErrorRow(position)) {
+            errorListItemCreator.onBindViewHolder(holder, position);
         } else {
             wrappedAdapter.onBindViewHolder(holder, position);
         }
@@ -36,17 +64,26 @@ class WrapperAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     @Override
     public int getItemCount() {
-        return displayLoadingRow ? wrappedAdapter.getItemCount() + 1 : wrappedAdapter.getItemCount();
+        return (displayLoadingRow || displayErrorRow)
+                ? wrappedAdapter.getItemCount() + 1 : wrappedAdapter.getItemCount();
     }
 
     @Override
     public int getItemViewType(int position) {
-        return isLoadingRow(position) ? ITEM_VIEW_TYPE_LOADING : wrappedAdapter.getItemViewType(position);
+        if (isLoadingRow(position)) {
+            return ITEM_VIEW_TYPE_LOADING;
+        } else if (isErrorRow(position)) {
+            return ITEM_VIEW_TYPE_ERROR;
+        } else {
+            return wrappedAdapter.getItemViewType(position);
+        }
     }
 
     @Override
     public long getItemId(int position) {
-        return isLoadingRow(position) ? RecyclerView.NO_ID : wrappedAdapter.getItemId(position);
+        return (isLoadingRow(position) ||
+                isErrorRow(position)) ? RecyclerView.NO_ID :
+                wrappedAdapter.getItemId(position);
     }
 
     @Override
@@ -77,4 +114,24 @@ class WrapperAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private int getLoadingRowPosition() {
         return displayLoadingRow ? getItemCount() - 1 : -1;
     }
+
+    boolean isDisplayErrorRow() {
+        return displayErrorRow;
+    }
+
+    void displayErrorRow(boolean displayErrorRow) {
+        if (this.displayErrorRow != displayErrorRow) {
+            this.displayLoadingRow = displayErrorRow;
+            notifyDataSetChanged();
+        }
+    }
+
+    boolean isErrorRow(int position) {
+        return displayErrorRow && position == getErrorRowPosition();
+    }
+
+    private int getErrorRowPosition() {
+        return displayErrorRow ? getItemCount() - 1 : -1;
+    }
+
 }

@@ -27,7 +27,19 @@ public abstract class Paginate {
          * @return true if all pages has been loaded, false otherwise.
          */
         boolean hasLoadedAllItems();
+
+        /**
+         *
+         * @return true if something went wrong while loading, false otherwise.
+         */
+        boolean hasLoadingErrorOccurred();
+
+        /** Called once an error occurred in loading the next page! */
+        void onLoadMoreFailed();
+
     }
+
+    abstract public void adapterChanged();
 
     /**
      * Use this method to indicate that there is or isn't more data to load. If there isn't any more data to load
@@ -67,8 +79,11 @@ public abstract class Paginate {
      * @param callback    pagination callbacks.
      * @return {@link com.paginate.abslistview.AbsListViewPaginate.Builder}
      */
-    public static AbsListViewPaginate.Builder with(AbsListView absListView, Callbacks callback) {
+    public static AbsListViewPaginate.Builder with(AbsListView absListView,
+                                                   Callbacks callback) {
         return new AbsListViewPaginate.Builder(absListView, callback);
     }
+
+
 
 }

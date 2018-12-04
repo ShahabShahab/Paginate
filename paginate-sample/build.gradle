@@ -2,7 +2,6 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
         applicationId "com.example.paginate"
@@ -17,6 +16,7 @@ dependencies {
     compile deps.appcompat
     compile deps.supportv4
     compile deps.cardview
+    compile deps.recyclerview
 
     compile deps.recyclerviewanimators
     compile deps.smoothprogressbar

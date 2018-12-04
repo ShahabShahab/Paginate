@@ -100,6 +100,16 @@ public class AbsListViewExampleActivity extends BaseActivity implements
     }
 
     @Override
+    public boolean hasLoadingErrorOccurred() {
+        return false;
+    }
+
+    @Override
+    public void onLoadMoreFailed() {
+
+    }
+
+    @Override
     public void onScrollStateChanged(AbsListView view, int scrollState) {
         Log.d("Paginate", "Scroll state: " + scrollState);
     }

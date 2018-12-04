@@ -42,7 +42,9 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected int itemsPerPage = 10;
     protected long networkDelay = 2000;
     protected boolean addLoadingRow = true;
+    protected boolean addErrorRow = true;
     protected boolean customLoadingListItem = false;
+    protected boolean customErrorListItem = true;
 
     // RecyclerView specific options
     protected LayoutManagerEnum layoutManagerEnum = LayoutManagerEnum.LINEAR;
