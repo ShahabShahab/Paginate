@@ -221,9 +221,7 @@ public class RecyclerViewExampleActivity extends BaseActivity implements
                         paginate.adapterChanged();
                     }
                 });
-
             }
         }
-
     }
 }

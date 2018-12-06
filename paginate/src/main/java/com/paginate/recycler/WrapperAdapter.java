@@ -121,7 +121,7 @@ class WrapperAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     void displayErrorRow(boolean displayErrorRow) {
         if (this.displayErrorRow != displayErrorRow) {
-            this.displayLoadingRow = displayErrorRow;
+            this.displayErrorRow = displayErrorRow;
             notifyDataSetChanged();
         }
     }

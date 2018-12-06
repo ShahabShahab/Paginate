@@ -134,7 +134,7 @@ public final class RecyclerPaginate extends Paginate {
 
     private void onAdapterDataChanged() {
         wrapperAdapter.displayLoadingRow(!callbacks.hasLoadedAllItems());
-        wrapperAdapter.displayErrorRow(!callbacks.hasLoadingErrorOccurred());
+        wrapperAdapter.displayErrorRow(callbacks.hasLoadingErrorOccurred());
         checkEndOffset();
     }
 
